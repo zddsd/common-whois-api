@@ -1,11 +1,18 @@
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
-import whois from 'whois'
-import { promisify } from 'util'
+const whois = require('whois')
 import express from 'express'
 
 const app = express()
-const whoisLookup = promisify(whois.lookup)
+
+function whoisLookupPromise(domain: string, options: any): Promise<string> {
+  return new Promise((resolve, reject) => {
+    whois.lookup(domain, options, (err: any, data: string) => {
+      if (err) return reject(err)
+      resolve(data)
+    })
+  })
+}
 
 app.get('/api/whois', async (req, res) => {
   try {
@@ -31,7 +38,7 @@ app.get('/api/whois', async (req, res) => {
       return res.status(400).json({ success: false, message: `No WHOIS server found for TLD: ${tld}` })
     }
     // 执行 WHOIS 查询
-    const result = await whoisLookup(domain, { server: whoisServer })
+    const result = await whoisLookupPromise(domain, { server: whoisServer })
     res.setHeader('Access-Control-Allow-Origin', '*')
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -42,4 +49,12 @@ app.get('/api/whois', async (req, res) => {
 })
 
 // Vercel Serverless 入口
-export default app 
+export default app
+
+// 本地调试用
+if (require.main === module) {
+  const port = process.env.PORT || 3000
+  app.listen(port, () => {
+    console.log(`WHOIS API 服务已启动，端口: ${port}`)
+  })
+} 

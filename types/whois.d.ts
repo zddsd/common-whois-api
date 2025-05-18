@@ -5,8 +5,8 @@ declare module 'whois' {
     timeout?: number
     verbose?: boolean
   }
-  export function lookup(domain: string, options?: WhoisOptions, callback?: (err: Error | null, data: string) => void): void
-  export default {
-    lookup
-  }
+  function lookup(domain: string, options: WhoisOptions, callback: (err: any, data: string) => void): void;
+  function lookup(domain: string, callback: (err: any, data: string) => void): void;
+  const whois: { lookup: typeof lookup };
+  export = whois;
 } 
